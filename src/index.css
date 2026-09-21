@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* 🎨 THE ELECTRIC PALM BRAND PALETTE */
+  --color-brand-volt: #CCFF00;       /* ⚡ Electric Neon Volt */
+  --color-brand-mint: #00FF88;       /* 🟢 Cyber Mint */
+  --color-brand-dark: #0B0F12;       /* ⬛ Rich Editorial Ink-Black */
+  --color-brand-muted: #161F24;      /* 🎛️ Low-contrast surface */
+  --color-brand-canvas: #F9FAFB;     /* 🏳️ Pure Gallery White */
+
+  /* Editorial Grade Typography Stack */
+  --font-sans: "Plus Jakarta Sans", "Inter", "system-ui", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+
+  /* Architectural Sharp Edges & Brutalist Custom Shadows */
+  --radius-premium: 4px;
+  --radius-brutal: 0px;
+  --shadow-hard: 4px 4px 0px 0px #0B0F12;
+  --shadow-hard-volt: 4px 4px 0px 0px #CCFF00;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-canvas);
+    color: var(--color-brand-dark);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* 🌟 EXTENDED UTILITIES */
+.text-gradient-sharp {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, var(--color-brand-dark), var(--color-brand-muted), var(--color-brand-mint));
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E5E7EB;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #D1D5DB;
+}
