@@ -28,6 +28,10 @@ export default function Dashboard() {
   const [prodSpecs, setProdSpecs] = useState('');
   const [prodAliases, setProdAliases] = useState('');
 
+  const [newAlertNumber, setNewAlertNumber] = useState(tenant?.alertPhoneNumber || '');
+  const [isUpdatingNumber, setIsUpdatingNumber] = useState(false);
+  const [numberSuccess, setNumberSuccess] = useState(false);
+
   const pollingRef = useRef(null);
 
   // Format the user's phone number as a friendly header title
@@ -101,6 +105,32 @@ export default function Dashboard() {
     }
   };
 
+    // Request Alert Number Update
+    const handleUpdateAlertNumber = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setIsUpdatingNumber(true);
+        setNumberSuccess(false);
+
+        try {
+        const result = await apiClient('/tenant/alert-number', {
+            method: 'PATCH',
+            body: JSON.stringify({ alertPhoneNumber: newAlertNumber })
+        });
+
+        if (result.status === 'success') {
+            setNumberSuccess(true);
+            // Cleanly wipe the success banner after 3 seconds
+            setTimeout(() => setNumberSuccess(false), 3000);
+        }
+        } catch (err) {
+        setError(err.message || 'Could not update your notification phone number.');
+        } finally {
+        setIsUpdatingNumber(false);
+        }
+    };
+
+
   // 4. Add Product to Database
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -169,65 +199,105 @@ export default function Dashboard() {
         
         {/* LEFT COLUMN PANEL: WHATSAPP PHONE SENDER CONNECTOR CHANNEL */}
         <section className="lg:col-span-4 flex flex-col gap-6">
-          <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6">
-            <div className="flex justify-between items-center border-b border-gray-100 pb-4">
-              <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-brand-mint" />
-                <span>Link System</span>
-              </h2>
-              
-              {/* Dynamic Status Badges */}
-              {botStatus === 'CONNECTED' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 border border-brand-mint text-[10px] font-bold uppercase tracking-wider text-green-700 rounded-sm">
-                  <CheckCircle2 className="w-3 h-3 text-brand-mint fill-brand-mint" /> Connected
-                </span>
-              )}
-              {botStatus === 'GENERATING_QR' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 border border-yellow-400 text-[10px] font-bold uppercase tracking-wider text-yellow-700 rounded-sm animate-pulse">
-                  <RefreshCw className="w-3 h-3 text-yellow-600 animate-spin" /> Ready to Scan
-                </span>
-              )}
-              {botStatus === 'DISCONNECTED' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-50 border border-brand-dark/20 text-[10px] font-bold uppercase tracking-wider text-gray-500 rounded-sm">
-                  Offline
-                </span>
-              )}
-            </div>
 
-            {error && (
-              <div className="p-3.5 bg-red-50 border border-red-200 text-red-900 rounded-premium text-xs font-bold leading-normal flex gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+  {/* 🌟 NEW NOTIFICATION SETTINGS CARD */}
+  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-4">
+    <h3 className="text-xs uppercase font-mono tracking-wider font-bold text-gray-400">
+      Notification Routing Settings
+    </h3>
+    
+    <form onSubmit={handleUpdateAlertNumber} className="flex flex-col gap-3">
+      <div>
+        <label className="block text-xs font-bold text-brand-dark mb-1.5">
+          Receive Sales Alerts On:
+        </label>
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            required 
+            value={newAlertNumber} 
+            onChange={(e) => setNewAlertNumber(e.target.value)} 
+            className="flex-grow p-3 bg-white border border-gray-300 rounded-sm text-xs font-semibold focus:outline-none focus:border-brand-dark" 
+            placeholder="e.g. 2348039098270" 
+          />
+          <button 
+            type="submit" 
+            disabled={isUpdatingNumber}
+            className="px-4 py-3 bg-brand-dark text-white text-xs font-bold rounded-premium hover:bg-black transition-colors disabled:opacity-50 shrink-0"
+          >
+            {isUpdatingNumber ? 'SAVING...' : 'SAVE'}
+          </button>
+        </div>
+      </div>
+    </form>
 
-            {/* THE VISUAL HANDSHAKE CANVAS DISPLAY ROUTINE */}
-            <div className="w-full aspect-square bg-brand-canvas border-2 border-dashed border-gray-300 rounded-premium flex flex-col items-center justify-center p-6 relative group overflow-hidden">
-              
-              {botStatus === 'CONNECTED' && (
-                <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
-                  <div className="w-16 h-16 bg-green-50 border border-brand-mint flex items-center justify-center rounded-full">
-                    <CheckCircle2 className="w-8 h-8 text-brand-mint fill-brand-mint" />
-                  </div>
-                  <h4 className="font-display font-bold text-lg">System Active</h4>
-                  <p className="text-gray-400 text-xs font-medium max-w-[200px] leading-relaxed">
-                    iBot is listening to group chat feeds and routing alerts to your private manager number.
-                  </p>
-                </div>
-              )}
+    {numberSuccess && (
+      <div className="p-2.5 bg-green-50 border border-brand-mint text-green-800 rounded-sm text-[11px] font-bold tracking-tight animate-fadeIn">
+        ✓ Notification path redirected completely.
+      </div>
+    )}
+  </div>
 
-              {botStatus === 'GENERATING_QR' && qrCodeString ? (
-                <div className="flex flex-col items-center gap-4 animate-fadeIn">
-                  <div className="p-4 bg-white border-2 border-brand-dark rounded-sm shadow-sm">
-                    <QRCodeSVG value={qrCodeString} size={180} level="H" includeMargin={false} />
-                  </div>
-                  <p className="text-gray-400 text-[11px] font-bold tracking-tight text-center leading-normal max-w-[220px]">
-                    Open WhatsApp ➔ Settings ➔ Linked Devices ➔ Tap Link a Device, and scan this code image.
-                  </p>
-                </div>
-              ) : null}
+  {/* ORIGINAL LINK SYSTEM CARD */}
+  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6">
+    <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+      <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
+        <QrCode className="w-5 h-5 text-brand-mint" />
+        <span>Link System</span>
+      </h2>
+      
+      {/* Dynamic Status Badges */}
+      {botStatus === 'CONNECTED' && (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 border border-brand-mint text-[10px] font-bold uppercase tracking-wider text-green-700 rounded-sm">
+          <CheckCircle2 className="w-3 h-3 text-brand-mint fill-brand-mint" /> Connected
+        </span>
+      )}
+      {botStatus === 'GENERATING_QR' && (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 border border-yellow-400 text-[10px] font-bold uppercase tracking-wider text-yellow-700 rounded-sm animate-pulse">
+          <RefreshCw className="w-3 h-3 text-yellow-600 animate-spin" /> Ready to Scan
+        </span>
+      )}
+      {botStatus === 'DISCONNECTED' && (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-50 border border-brand-dark/20 text-[10px] font-bold uppercase tracking-wider text-gray-500 rounded-sm">
+          Offline
+        </span>
+      )}
+    </div>
 
-              {(botStatus === 'DISCONNECTED' || (botStatus === 'INITIALIZING' && !qrCodeString)) && (
+    {error && (
+      <div className="p-3.5 bg-red-50 border border-red-200 text-red-900 rounded-premium text-xs font-bold leading-normal flex gap-2">
+        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+        <span>{error}</span>
+      </div>
+    )}
+
+    {/* THE VISUAL HANDSHAKE CANVAS DISPLAY ROUTINE */}
+    <div className="w-full aspect-square bg-brand-canvas border-2 border-dashed border-gray-300 rounded-premium flex flex-col items-center justify-center p-6 relative group overflow-hidden">
+      
+      {botStatus === 'CONNECTED' && (
+        <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
+          <div className="w-16 h-16 bg-green-50 border border-brand-mint flex items-center justify-center rounded-full">
+            <CheckCircle2 className="w-8 h-8 text-brand-mint fill-brand-mint" />
+          </div>
+          <h4 className="font-display font-bold text-lg">System Active</h4>
+          <p className="text-gray-400 text-xs font-medium max-w-[200px] leading-relaxed">
+            iBot is listening to group chat feeds and routing alerts to your private manager number.
+          </p>
+        </div>
+      )}
+
+      {botStatus === 'GENERATING_QR' && qrCodeString ? (
+        <div className="flex flex-col items-center gap-4 animate-fadeIn">
+          <div className="p-4 bg-white border-2 border-brand-dark rounded-sm shadow-sm">
+            <QRCodeSVG value={qrCodeString} size={180} level="H" includeMargin={false} />
+          </div>
+          <p className="text-gray-400 text-[11px] font-bold tracking-tight text-center leading-normal max-w-[220px]">
+            Open WhatsApp ➔ Settings ➔ Linked Devices ➔ Tap Link a Device, and scan this code image.
+          </p>
+        </div>
+      ) : null}
+
+      {(botStatus === 'DISCONNECTED' || (botStatus === 'INITIALIZING' && !qrCodeString)) && (
                 <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
                   <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
                     <Phone className="w-5 h-5 text-gray-400" />
@@ -238,19 +308,20 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-            </div>
+    </div>
 
-            {botStatus === 'DISCONNECTED' && (
-              <button
-                onClick={handleStartConnection}
-                disabled={isSpawning}
-                className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
-              >
-                {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
-              </button>
-            )}
-          </div>
-        </section>
+    {botStatus === 'DISCONNECTED' && (
+      <button
+        onClick={handleStartConnection}
+        disabled={isSpawning}
+        className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+      >
+        {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
+      </button>
+    )}
+  </div>
+</section>
+
 
         {/* RIGHT COLUMN PANEL: INVENTORY MANAGEMENT AND CATALOG GRID */}
         <section className="lg:col-span-8 flex flex-col gap-6">
