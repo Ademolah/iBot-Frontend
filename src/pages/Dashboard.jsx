@@ -168,6 +168,26 @@ export default function Dashboard() {
     }
   };
 
+    // Request Item Deletion
+  const handleDeleteProduct = async (productId) => {
+    // A clean browser confirmation box to prevent accidental clicks
+    if (!window.confirm('Are you sure you want to remove this item from your stock?')) return;
+
+    try {
+      const result = await apiClient(`/tenant/inventory/${productId}`, {
+        method: 'DELETE'
+      });
+
+      if (result.status === 'success') {
+        // Refresh the table layout view instantly
+        loadInventory();
+      }
+    } catch (err) {
+      setError(err.message || 'Could not delete the item.');
+    }
+  };
+
+
   const handleExit = () => {
     stopPolling();
     logout();
@@ -398,37 +418,56 @@ export default function Dashboard() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
-                  <thead>
-                    <tr className="bg-brand-canvas border-b border-gray-200">
-                      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Item Identifier Name</th>
-                      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Model Blueprint</th>
-                      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Price Valuation</th>
-                      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {inventory.map((item, index) => (
-                      <tr key={item._id || index} className="hover:bg-brand-canvas/50 transition-colors">
-                        <td className="p-4 font-bold text-sm text-brand-dark">
-                          {item.name}
-                        </td>
-                        <td className="p-4">
-                          <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-[11px] font-bold rounded-sm">
-                            {item.brand} ➔ {item.modelName}
-                          </span>
-                        </td>
-                        <td className="p-4 font-mono font-bold text-sm">
-                          ₦{item.price?.toLocaleString()}
-                        </td>
-                        <td className="p-4">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 border border-green-200 text-[10px] font-bold uppercase tracking-wider text-green-700 rounded-sm">
-                            Active
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+  <thead>
+    <tr className="bg-brand-canvas border-b border-gray-200">
+      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Item Identifier Name</th>
+      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Model Blueprint</th>
+      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Price Valuation</th>
+      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</th>
+      <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-center">Actions</th> {/* 🌟 Added Actions Header */}
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-100">
+    {inventory.map((item, index) => (
+      <tr key={item._id || index} className="hover:bg-brand-canvas/50 transition-colors">
+        <td className="p-4 font-bold text-sm text-brand-dark">
+          {item.name}
+        </td>
+        <td className="p-4">
+          <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-[11px] font-bold rounded-sm">
+            {item.brand} ➔ {item.modelName}
+          </span>
+        </td>
+        <td className="p-4 font-mono font-bold text-sm">
+          ₦{item.price?.toLocaleString()}
+        </td>
+        <td className="p-4">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 border border-green-200 text-[10px] font-bold uppercase tracking-wider text-green-700 rounded-sm">
+            Active
+          </span>
+        </td>
+        
+        {/* 🌟 THE SURGICAL ACTIONS CELL WITH DELETION TRASH CAN */}
+        <td className="p-4 text-center">
+          <button
+            onClick={() => handleDeleteProduct(item._id)}
+            className="p-1.5 border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-600 rounded-sm active:scale-90 transition-all cursor-pointer"
+            title="Delete Item"
+          >
+            <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+        </td>
+
+      </tr>
+    ))}
+  </tbody>
+</table>
+
               </div>
             )}
           </div>
