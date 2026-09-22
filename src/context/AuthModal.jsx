@@ -125,7 +125,7 @@ export default function AuthModal() {
               type="submit" disabled={isSubmitting}
               className="w-full py-4 bg-brand-dark text-white rounded-premium font-bold hover:bg-black hover:shadow-hard-volt transition-all flex items-center justify-center gap-2 group mt-4 active:scale-98 duration-100 disabled:opacity-50"
             >
-              <span>{isSubmitting ? 'VALIDATING...' : isLoginView ? 'INITIALIZE TERM' : 'LAUNCH NODE'}</span>
+              <span>{isSubmitting ? 'VALIDATING...' : isLoginView ? 'LOGIN' : 'REGISTER'}</span>
               {!isSubmitting && <ArrowRight className="w-4 h-4 text-brand-volt group-hover:translate-x-0.5 transition-transform" />}
             </button>
           </form>

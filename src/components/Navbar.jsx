@@ -47,7 +47,7 @@ export default function Navbar() {
                 onClick={() => setIsAuthModalOpen(true)}
                 className="px-5 py-2.5 bg-brand-dark text-white text-sm font-bold rounded-premium hover:bg-black hover:shadow-hard-volt transition-all flex items-center gap-2 group active:scale-95 duration-100"
               >
-                <span>Register Node</span>
+                <span>Register Business</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-brand-volt group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </>
@@ -75,7 +75,7 @@ export default function Navbar() {
               <>
                 <button onClick={() => { setIsAuthModalOpen(true); setIsStateOpen(false); }} className="w-full py-3 bg-white border-2 border-brand-dark font-bold text-brand-dark rounded-premium">Terminal Access</button>
                 <button onClick={() => { setIsAuthModalOpen(true); setIsStateOpen(false); }} className="w-full py-3 bg-brand-dark text-white font-bold rounded-premium flex items-center justify-center gap-2">
-                  <span>Register Node</span>
+                  <span>Register Business</span>
                   <ArrowUpRight className="w-4 h-4 text-brand-volt" />
                 </button>
               </>
