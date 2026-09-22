@@ -41,27 +41,67 @@ export default function Home() {
           </div>
 
           {/* Telemetry Visual Canvas */}
-          <div className="lg:col-span-5 w-full aspect-[4/3] bg-brand-dark text-white p-8 rounded-premium shadow-hard border-2 border-brand-dark flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-volt rounded-full opacity-10 blur-2xl"></div>
-            
-            <div className="flex justify-between items-start">
-              <Server className="w-8 h-8 text-brand-volt" />
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand-muted border border-gray-700 rounded-sm font-mono text-[10px] tracking-wider text-brand-mint uppercase font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse"></span>
-                <span>Cluster Live</span>
-              </div>
-            </div>
+<div className="lg:col-span-5 w-full aspect-[4/3] bg-brand-dark text-white p-6 rounded-premium shadow-hard border-2 border-brand-dark flex flex-col justify-between relative overflow-hidden group font-mono selection:bg-brand-volt selection:text-brand-dark">
+  {/* Cyber Radar Grid Background lines */}
+  <div className="absolute inset-0 bg-[linear-gradient(to_right,#161F24_1px,transparent_1px),linear-gradient(to_bottom,#161F24_1px,transparent_1px)] bg-[size:20px_24px] opacity-40"></div>
+  <div className="absolute top-0 right-0 w-40 h-48 bg-brand-mint rounded-full opacity-5 blur-3xl pointer-events-none group-hover:opacity-10 transition-opacity duration-700"></div>
 
-            <div className="flex flex-col gap-2 font-mono text-xs text-gray-400">
-              <div className="text-brand-volt uppercase font-bold text-[10px] tracking-widest">Active Stream Interceptor</div>
-              <div className="text-gray-100 font-sans text-xl font-bold tracking-tight leading-snug">
-                "who get macbook m2 for sell?" ➔ Match found: Apple MacBook Pro M2
-              </div>
-              <div className="text-[10px] text-gray-500">
-                redis_cache: hit (0.4ms) | dispatch_target: 2348039xxxx
-              </div>
-            </div>
-          </div>
+  {/* Top Control Bar Panel */}
+  <div className="flex justify-between items-center relative z-10 border-b border-brand-muted pb-4">
+    <div className="flex items-center gap-2">
+      <div className="w-2 h-2 rounded-full bg-brand-volt animate-ping"></div>
+      <span className="text-[10px] tracking-widest text-brand-volt uppercase font-bold">iBot_Core_v4.0</span>
+    </div>
+    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-brand-muted border border-gray-800 rounded-sm text-[9px] tracking-wider text-brand-mint uppercase font-bold">
+      <span className="w-1 h-1 rounded-full bg-brand-mint animate-pulse"></span>
+      <span>Cluster: Active</span>
+    </div>
+  </div>
+
+  {/* Main Live Stream Matrix Terminal */}
+  <div className="flex-grow my-4 flex flex-col gap-3 justify-center relative z-10 text-[11px] leading-relaxed">
+    
+    {/* Log Stream Line 1 */}
+    <div className="flex flex-col gap-0.5 text-gray-500">
+      <div className="text-[9px] text-gray-600">TIMESTAMP: 1789927761 // INBOUND_STREAM</div>
+      <div>[PACKET_RECV] FROM: <span className="text-gray-400">1203634292@g.us</span> (Premium Marketplace)</div>
+    </div>
+
+    {/* Log Stream Line 2 (The Intercepted Message Block) */}
+    <div className="p-3 bg-brand-muted/50 border border-brand-muted rounded-sm text-gray-300 font-sans italic relative overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand-mint"></div>
+      "who get clean macbook m2 pro for buy inside lagos?"
+    </div>
+
+    {/* Log Stream Line 3 (The Real-Time Processing Assessment) */}
+    <div className="flex flex-col gap-1 text-gray-400">
+      <div className="flex items-center gap-2 text-brand-mint font-bold uppercase text-[10px] tracking-wider animate-pulse">
+        <span>⚡ TARGET IDENTIFIED</span>
+        <span className="text-[9px] bg-brand-mint/10 text-brand-mint px-1 rounded-sm">100% INTENT</span>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-[10px] border-t border-brand-muted/40 pt-2 mt-1">
+        <div><span className="text-gray-600">KEY_MATCH :</span> <span className="text-brand-volt font-bold">"macbook m2"</span></div>
+        <div><span className="text-gray-600">DB_CATALOG:</span> <span className="text-gray-300">Apple_MacBook_M2</span></div>
+        <div><span className="text-gray-600">SPEED_VAL :</span> <span className="text-gray-500">0.24ms (CACHE_HIT)</span></div>
+        <div><span className="text-gray-600">TENANT_ID :</span> <span className="text-gray-500">tn_user_883a</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  {/* Bottom Telemetry Metrics Line */}
+  <div className="flex justify-between items-center relative z-10 border-t border-brand-muted/40 pt-3 text-[9px] font-bold text-gray-500 tracking-wider">
+    <div className="flex items-center gap-4">
+      <div>RAM: <span className="text-gray-300">14.2MB</span></div>
+      <div>ROUTING_TO: <span className="text-brand-mint font-mono">2348039XXXX</span></div>
+    </div>
+    <div className="text-right text-gray-600">
+      SYS_OK // SECURE_ISO
+    </div>
+  </div>
+</div>
+
         </section>
 
         {/* 3. Tactical Architecture Metrics Section */}
