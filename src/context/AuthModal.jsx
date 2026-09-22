@@ -24,7 +24,7 @@ export default function AuthModal() {
     setError(null);
     setIsSubmitting(true);
 
-    const endpoint = isLoginView ? '/auth/login' : '/api/auth/register'; // Fixed forward mapping targets
+    const endpoint = isLoginView ? '/auth/login' : '/auth/register'; // Fixed forward mapping targets
     const payload = isLoginView 
       ? { email, password } 
       : { email, password, alertPhoneNumber };
