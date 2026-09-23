@@ -54,19 +54,22 @@ export default function Dashboard() {
     }
   };
 
-    // 2. Poll the Backend for Live QR and Login Connection States
-    // 2. Poll the Backend for Live QR and Login Connection States
-    // 2. Poll the Backend for Live QR and Login Connection States
-    // 2. Poll the Backend for Live QR and Login Connection States
+    
   const checkBotStatus = async () => {
     try {
       const result = await apiClient('/tenant/bot/status', { method: 'GET' });
       if (result && result.status === 'success') {
-        setBotStatus(result.data.connectionStatus);
-        setQrCodeString(result.data.qrCode);
+        const currentStatus = result.data.connectionStatus;
         
-        if (result.data.connectionStatus === 'CONNECTED') {
+        setBotStatus(currentStatus);
+
+        // 🌟 CACHE HYDRATION CLEANUP: If the bot successfully links, stop background calls
+        // and instantly nullify the old QR text string so its graphic layout collapses cleanly!
+        if (currentStatus === 'CONNECTED') {
+          setQrCodeString(null);
           stopPolling();
+        } else {
+          setQrCodeString(result.data.qrCode);
         }
       }
     } catch (err) {
@@ -74,22 +77,36 @@ export default function Dashboard() {
     }
   };
 
+
   // 3. Request WhatsApp Connection (Spawn Instance)
+    // 3. Request WhatsApp Connection (Spawn Instance)
   const handleStartConnection = async () => {
     setError(null);
     setIsSubmittingSpawn(true);
+    
+    // 🌟 FRONTEND LIFE CYCLE GUARD: Force the UI status to pivot instantly on click.
+    // This breaks any legacy green status blocks and prepares the canvas for the new code stream.
+    setBotStatus('GENERATING_QR');
+    setQrCodeString(null);
+
     try {
       const result = await apiClient('/tenant/bot/spawn', { method: 'POST' });
       if (result && result.status === 'success') {
-        setBotStatus('INITIALIZING');
-        startPolling();
+        // Flash the minimalist SaaS toast banner layout elegantly
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        
+        // Start checking your backend routes every 3 seconds for the fresh string
+        startPolling(); 
       }
     } catch (err) {
       setError(err.message || 'Failed to start the WhatsApp connector.');
+      setBotStatus('DISCONNECTED');
     } finally {
       setIsSubmittingSpawn(false);
     }
   };
+
 
 
 
@@ -275,7 +292,17 @@ export default function Dashboard() {
 
        {/* ORIGINAL LINK SYSTEM CARD */}
     {/* ORIGINAL LINK SYSTEM CARD */}
-  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6">
+    {/* ORIGINAL LINK SYSTEM CARD */}
+  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6 relative">
+    
+    {/* ELEGANT TOAST BANNER DISPLAY FLOATER */}
+    {showToast && (
+      <div className="fixed bottom-6 right-6 z-50 bg-brand-dark text-white border border-brand-mint px-4 py-3 text-xs font-mono font-bold tracking-tight rounded-sm shadow-hard animate-fadeIn flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
+        <span>NEW QR CODE GENERATED SUCCESSFULLY</span>
+      </div>
+    )}
+
     <div className="flex justify-between items-center border-b border-gray-100 pb-4">
       <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
         <QrCode className="w-5 h-5 text-brand-mint" />
@@ -346,16 +373,16 @@ export default function Dashboard() {
       )}
     </div>
 
-    {botStatus === 'DISCONNECTED' && (
-      <button
-        onClick={handleStartConnection}
-        disabled={isSpawning}
-        className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
-      >
-        {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
-      </button>
-    )}
+    {/* 🌟 PERPETUAL CONTROL GENERATOR: Hardcoded out of conditional blocks to stay visible permanently */}
+    <button
+      onClick={handleStartConnection}
+      disabled={isSpawning}
+      className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center cursor-pointer"
+    >
+      {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
+    </button>
   </div>
+
 
 
 
