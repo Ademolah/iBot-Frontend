@@ -55,27 +55,39 @@ export default function Dashboard() {
   };
 
     // 2. Poll the Backend for Live QR and Login Connection States
+    // 2. Poll the Backend for Live QR and Login Connection States
   const checkBotStatus = async () => {
     try {
       const result = await apiClient('/tenant/bot/status', { method: 'GET' });
+      
+      // 🔍 FRONTEND POLLING DEBUG TRACE
+      console.log('🔄 [POLLING CHECK]: Received telemetry data from server:', {
+        status: result?.data?.connectionStatus,
+        hasQrCode: !!result?.data?.qrCode,
+        rawPayload: result?.data
+      });
+
       if (result && result.status === 'success') {
         const currentStatus = result.data.connectionStatus;
         
         setBotStatus(currentStatus);
 
-        // If the user successfully links their phone, stop the background network loop
-        // and instantly clear the QR string out of memory to hide the canvas widget box!
+        // If the user successfully links their phone, clear memory and halt polling
         if (currentStatus === 'CONNECTED') {
+          console.log('🟢 [POLL MATCH]: Connection verified active! Collapsing canvas wrappers...');
           setQrCodeString(null);
           stopPolling();
         } else {
+          // Pipe the active QR string into state memory
           setQrCodeString(result.data.qrCode);
         }
       }
     } catch (err) {
+      console.error('❌ [POLLING ERROR]: Background tracking cycle dropped:', err);
       setError('Could not connect to the bot server checker loop.');
     }
   };
+
 
 
   const startPolling = () => {
