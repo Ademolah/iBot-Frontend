@@ -57,41 +57,40 @@ export default function Dashboard() {
     // 2. Poll the Backend for Live QR and Login Connection States
     // 2. Poll the Backend for Live QR and Login Connection States
     // 2. Poll the Backend for Live QR and Login Connection States
+    // 2. Poll the Backend for Live QR and Login Connection States
   const checkBotStatus = async () => {
     try {
       const result = await apiClient('/tenant/bot/status', { method: 'GET' });
-      
-      console.log('🔄 [POLLING CHECK]: Received telemetry data from server:', {
-        status: result?.data?.connectionStatus,
-        hasQrCode: !!result?.data?.qrCode,
-        rawPayload: result?.data
-      });
-
       if (result && result.status === 'success') {
-        const currentStatus = result.data.connectionStatus;
-        const incomingQr = result.data.qrCode;
-
-        // 🌟 THE IMMEDIATE BLOCK FIX: If we are actively trying to scan a QR code,
-        // do NOT let an empty "DISCONNECTED" response from the database wipe our screen!
-        if (currentStatus === 'CONNECTED') {
-          console.log('🟢 [POLL MATCH]: Connection verified active! Collapsing canvas wrappers...');
-          setBotStatus('CONNECTED');
-          setQrCodeString(null);
+        setBotStatus(result.data.connectionStatus);
+        setQrCodeString(result.data.qrCode);
+        
+        if (result.data.connectionStatus === 'CONNECTED') {
           stopPolling();
-        } 
-        else if (incomingQr) {
-          // A valid QR string has arrived! Update states to show it cleanly
-          setBotStatus('GENERATING_QR');
-          setQrCodeString(incomingQr);
         }
-        // If there's no QR string yet and we are not connected, leave the frontend 
-        // in its 'GENERATING_QR' loading state so it keeps the canvas mounted!
       }
     } catch (err) {
-      console.error('❌ [POLLING ERROR]: Background tracking cycle dropped:', err);
       setError('Could not connect to the bot server checker loop.');
     }
   };
+
+  // 3. Request WhatsApp Connection (Spawn Instance)
+  const handleStartConnection = async () => {
+    setError(null);
+    setIsSubmittingSpawn(true);
+    try {
+      const result = await apiClient('/tenant/bot/spawn', { method: 'POST' });
+      if (result && result.status === 'success') {
+        setBotStatus('INITIALIZING');
+        startPolling();
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to start the WhatsApp connector.');
+    } finally {
+      setIsSubmittingSpawn(false);
+    }
+  };
+
 
 
 
@@ -115,56 +114,8 @@ export default function Dashboard() {
     return () => stopPolling();
   }, []);
 
-     // 3. Request WhatsApp Connection (Spawn Instance)
-    // 3. Request WhatsApp Connection (Spawn Instance)
-  const handleStartConnection = async () => {
-    // 🔍 FRONTEND DEBUG TRACE 1: Entry Point Triggered
-    console.log('🚀 [BOT SPAWN TRIGGER]: Initiating connection handshake routine from frontend dashboard UI...');
-    
-    setError(null);
-    setIsSubmittingSpawn(true);
-    
-    // 🌟 THE CRITICAL FRONTEND OVERRIDE: Clear old state parameters immediately on click!
-    // This breaks the "CONNECTED" visual lock, forces the box to mount the QR container,
-    // and clears any stale matrix data before the new network poll completes.
-    setBotStatus('GENERATING_QR');
-    setQrCodeString(null);
 
-    try {
-      // Execute the secure network transaction call to Render
-      const result = await apiClient('/tenant/bot/spawn', { method: 'POST' });
-      
-      // 🔍 FRONTEND DEBUG TRACE 2: Parse Network Transaction Payload
-      console.log('📡 [BOT SPAWN RESPONSE]: API layer execution complete. Server payload payload:', result);
-
-      if (result && result.status === 'success') {
-        console.log('✨ [BOT SPAWN SUCCESS]: Channel allocation script accepted. Initializing 3s polling loop routine...');
-        
-        // Flash the minimalist SaaS toast banner layout elegantly
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-        
-        // Start checking your backend routes every 3 seconds for the fresh string
-        startPolling(); 
-      } else {
-        console.warn('⚠️ [BOT SPAWN MISMATCH]: Endpoint returned 200/202 but did not explicitly sign off status as "success".');
-      }
-    } catch (err) {
-      // 🔍 CRITICAL PRODUCTION ERROR CAPTURE: Prints the exact failure reason in your browser console logs
-      console.error('❌ [BOT SPAWN CRASH]: Critical infrastructure transaction fault caught:', {
-        errorMessage: err.message,
-        errorStack: err.stack,
-        contextBaseUrl: import.meta.env.VITE_API_URL || 'Fallback Localhost'
-      });
-
-      setError(err.message || 'Failed to start the WhatsApp connector.');
-      // Fallback state guard if the network connection breaks
-      setBotStatus('DISCONNECTED');
-    } finally {
-      setIsSubmittingSpawn(false);
-      console.log('🏁 [BOT SPAWN CYCLE COMPLETE]: Submitting thread controls released.');
-    }
-  };
+  
 
 
 
@@ -323,16 +274,8 @@ export default function Dashboard() {
   </div>
 
        {/* ORIGINAL LINK SYSTEM CARD */}
-  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6 relative">
-    
-    {/* ELEGANT TOAST BANNER DISPLAY FLOATER */}
-    {showToast && (
-      <div className="fixed bottom-6 right-6 z-50 bg-brand-dark text-white border border-brand-mint px-4 py-3 text-xs font-mono font-bold tracking-tight rounded-sm shadow-hard animate-fadeIn flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
-        <span>NEW QR CODE GENERATED SUCCESSFULLY</span>
-      </div>
-    )}
-
+    {/* ORIGINAL LINK SYSTEM CARD */}
+  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6">
     <div className="flex justify-between items-center border-b border-gray-100 pb-4">
       <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
         <QrCode className="w-5 h-5 text-brand-mint" />
@@ -345,7 +288,7 @@ export default function Dashboard() {
           <CheckCircle2 className="w-3 h-3 text-brand-mint fill-brand-mint" /> Connected
         </span>
       )}
-      {(botStatus === 'GENERATING_QR' || botStatus === 'INITIALIZING') && (
+      {botStatus === 'GENERATING_QR' && (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 border border-yellow-400 text-[10px] font-bold uppercase tracking-wider text-yellow-700 rounded-sm animate-pulse">
           <RefreshCw className="w-3 h-3 text-yellow-600 animate-spin" /> Ready to Scan
         </span>
@@ -367,7 +310,6 @@ export default function Dashboard() {
     {/* THE VISUAL HANDSHAKE CANVAS DISPLAY ROUTINE */}
     <div className="w-full aspect-square bg-brand-canvas border-2 border-dashed border-gray-300 rounded-premium flex flex-col items-center justify-center p-6 relative group overflow-hidden">
       
-      {/* DISPLAY STATE A: BOT CONNECTED AND ACTIVE */}
       {botStatus === 'CONNECTED' && (
         <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
           <div className="w-16 h-16 bg-green-50 border border-brand-mint flex items-center justify-center rounded-full">
@@ -380,8 +322,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* DISPLAY STATE B: RECEIVING QR MATRIX STREAM FROM BACKEND */}
-      {(botStatus === 'GENERATING_QR' || botStatus === 'INITIALIZING') && qrCodeString ? (
+      {botStatus === 'GENERATING_QR' && qrCodeString ? (
         <div className="flex flex-col items-center gap-4 animate-fadeIn">
           <div className="p-4 bg-white border-2 border-brand-dark rounded-sm shadow-sm">
             <QRCodeSVG value={qrCodeString} size={180} level="H" includeMargin={false} />
@@ -392,19 +333,7 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      {/* DISPLAY STATE C: SPINNER LOADER WATCHING FOR COLD INITIATIONS */}
-      {(botStatus === 'GENERATING_QR' || botStatus === 'INITIALIZING') && !qrCodeString ? (
-        <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
-          <RefreshCw className="w-8 h-8 text-brand-dark animate-spin" />
-          <h4 className="font-display font-bold text-sm text-brand-dark">Fetching Session Code...</h4>
-          <p className="text-gray-400 text-xs font-medium max-w-[180px] leading-normal text-center">
-            Communicating with background container nodes to draw your connection keys.
-          </p>
-        </div>
-      ) : null}
-
-      {/* DISPLAY STATE D: OFFLINE AND SHUTDOWN STATE OVERLAYS */}
-      {botStatus === 'DISCONNECTED' && (
+      {(botStatus === 'DISCONNECTED' || (botStatus === 'INITIALIZING' && !qrCodeString)) && (
         <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
           <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
             <Phone className="w-5 h-5 text-gray-400" />
@@ -417,15 +346,17 @@ export default function Dashboard() {
       )}
     </div>
 
-    {/* PERPETUAL GENERATION CONTROL INTERCEPT BUTTON */}
-    <button
-      onClick={handleStartConnection}
-      disabled={isSpawning}
-      className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center cursor-pointer"
-    >
-      {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
-    </button>
+    {botStatus === 'DISCONNECTED' && (
+      <button
+        onClick={handleStartConnection}
+        disabled={isSpawning}
+        className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+      >
+        {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
+      </button>
+    )}
   </div>
+
 
 
 
