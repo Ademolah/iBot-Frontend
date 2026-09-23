@@ -56,11 +56,11 @@ export default function Dashboard() {
 
     // 2. Poll the Backend for Live QR and Login Connection States
     // 2. Poll the Backend for Live QR and Login Connection States
+    // 2. Poll the Backend for Live QR and Login Connection States
   const checkBotStatus = async () => {
     try {
       const result = await apiClient('/tenant/bot/status', { method: 'GET' });
       
-      // 🔍 FRONTEND POLLING DEBUG TRACE
       console.log('🔄 [POLLING CHECK]: Received telemetry data from server:', {
         status: result?.data?.connectionStatus,
         hasQrCode: !!result?.data?.qrCode,
@@ -69,24 +69,30 @@ export default function Dashboard() {
 
       if (result && result.status === 'success') {
         const currentStatus = result.data.connectionStatus;
-        
-        setBotStatus(currentStatus);
+        const incomingQr = result.data.qrCode;
 
-        // If the user successfully links their phone, clear memory and halt polling
+        // 🌟 THE IMMEDIATE BLOCK FIX: If we are actively trying to scan a QR code,
+        // do NOT let an empty "DISCONNECTED" response from the database wipe our screen!
         if (currentStatus === 'CONNECTED') {
           console.log('🟢 [POLL MATCH]: Connection verified active! Collapsing canvas wrappers...');
+          setBotStatus('CONNECTED');
           setQrCodeString(null);
           stopPolling();
-        } else {
-          // Pipe the active QR string into state memory
-          setQrCodeString(result.data.qrCode);
+        } 
+        else if (incomingQr) {
+          // A valid QR string has arrived! Update states to show it cleanly
+          setBotStatus('GENERATING_QR');
+          setQrCodeString(incomingQr);
         }
+        // If there's no QR string yet and we are not connected, leave the frontend 
+        // in its 'GENERATING_QR' loading state so it keeps the canvas mounted!
       }
     } catch (err) {
       console.error('❌ [POLLING ERROR]: Background tracking cycle dropped:', err);
       setError('Could not connect to the bot server checker loop.');
     }
   };
+
 
 
 
