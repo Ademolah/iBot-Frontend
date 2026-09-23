@@ -54,23 +54,29 @@ export default function Dashboard() {
     }
   };
 
-  // 2. Poll the Backend for Live QR and Login Connection States
+    // 2. Poll the Backend for Live QR and Login Connection States
   const checkBotStatus = async () => {
     try {
       const result = await apiClient('/tenant/bot/status', { method: 'GET' });
-      if (result.status === 'success') {
-        setBotStatus(result.data.connectionStatus);
-        setQrCodeString(result.data.qrCode);
+      if (result && result.status === 'success') {
+        const currentStatus = result.data.connectionStatus;
+        
+        setBotStatus(currentStatus);
 
         // If the user successfully links their phone, stop the background network loop
-        if (result.data.connectionStatus === 'CONNECTED') {
+        // and instantly clear the QR string out of memory to hide the canvas widget box!
+        if (currentStatus === 'CONNECTED') {
+          setQrCodeString(null);
           stopPolling();
+        } else {
+          setQrCodeString(result.data.qrCode);
         }
       }
     } catch (err) {
       setError('Could not connect to the bot server checker loop.');
     }
   };
+
 
   const startPolling = () => {
     stopPolling();
