@@ -11,6 +11,9 @@ import {
 export default function Dashboard() {
   const { tenant, logout } = useAuth();
   const { setCurrentScreen } = useNavigation();
+    // --- Dynamic UI Notification States ---
+  const [showToast, setShowToast] = useState(false);
+
 
   // --- Core Application States ---
   const [inventory, setInventory] = useState([]);
@@ -88,22 +91,37 @@ export default function Dashboard() {
     return () => stopPolling();
   }, []);
 
-  // 3. Request WhatsApp Connection (Spawn Instance)
+     // 3. Request WhatsApp Connection (Spawn Instance)
   const handleStartConnection = async () => {
     setError(null);
     setIsSubmittingSpawn(true);
+    
+    // 🌟 THE CRITICAL FRONTEND OVERRIDE: Clear old state parameters immediately on click!
+    // This breaks the "CONNECTED" visual lock, forces the box to mount the QR container,
+    // and clears any stale matrix data before the new network poll completes.
+    setBotStatus('GENERATING_QR');
+    setQrCodeString(null);
+
     try {
       const result = await apiClient('/tenant/bot/spawn', { method: 'POST' });
-      if (result.status === 'success') {
-        setBotStatus('INITIALIZING');
-        startPolling(); // Fire up the 3-second checker loop instantly
+      if (result && result.status === 'success') {
+        // Flash the minimalist SaaS toast banner layout elegantly
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        
+        // Start checking your backend routes every 3 seconds for the fresh string
+        startPolling(); 
       }
     } catch (err) {
       setError(err.message || 'Failed to start the WhatsApp connector.');
+      // Fallback state guard if the network connection breaks
+      setBotStatus('DISCONNECTED');
     } finally {
       setIsSubmittingSpawn(false);
     }
   };
+
+
 
     // Request Alert Number Update
     const handleUpdateAlertNumber = async (e) => {
@@ -258,8 +276,17 @@ export default function Dashboard() {
     )}
   </div>
 
-  {/* ORIGINAL LINK SYSTEM CARD */}
-  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6">
+     {/* ORIGINAL LINK SYSTEM CARD */}
+  <div className="p-6 bg-white border-2 border-brand-dark rounded-premium shadow-sm flex flex-col gap-6 relative">
+    
+    {/* 🌟 ELEGANT MINIMALIST TOAST ALERT FLOATER */}
+    {showToast && (
+      <div className="fixed bottom-6 right-6 z-50 bg-brand-dark text-white border border-brand-mint px-4 py-3 text-xs font-mono font-bold tracking-tight rounded-sm shadow-hard animate-fadeIn flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
+        <span>NEW QR CODE GENERATED SUCCESSFULLY</span>
+      </div>
+    )}
+
     <div className="flex justify-between items-center border-b border-gray-100 pb-4">
       <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
         <QrCode className="w-5 h-5 text-brand-mint" />
@@ -318,28 +345,29 @@ export default function Dashboard() {
       ) : null}
 
       {(botStatus === 'DISCONNECTED' || (botStatus === 'INITIALIZING' && !qrCodeString)) && (
-                <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
-                  <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <h4 className="font-display font-bold text-sm text-gray-600">WhatsApp Link Closed</h4>
-                  <p className="text-gray-400 text-xs font-medium max-w-[200px] leading-relaxed">
-                    Click the action below to spin up a connection stream code.
-                  </p>
-                </div>
-              )}
+        <div className="flex flex-col items-center text-center gap-3 animate-fadeIn">
+          <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
+            <Phone className="w-5 h-5 text-gray-400" />
+          </div>
+          <h4 className="font-display font-bold text-sm text-gray-600">WhatsApp Link Closed</h4>
+          <p className="text-gray-400 text-xs font-medium max-w-[200px] leading-relaxed">
+            Click the action below to spin up a connection stream code.
+          </p>
+        </div>
+      )}
     </div>
 
-    {botStatus === 'DISCONNECTED' && (
-      <button
-        onClick={handleStartConnection}
-        disabled={isSpawning}
-        className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
-      >
-        {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
-      </button>
-    )}
+    {/* 🌟 PERPETUAL GENERATION CONTROL INTERCEPT BUTTON */}
+    <button
+      onClick={handleStartConnection}
+      disabled={isSpawning}
+      className="w-full py-4 bg-brand-dark text-white font-bold text-xs rounded-premium hover:bg-black active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center cursor-pointer"
+    >
+      {isSpawning ? 'CREATING SESSION ENVIRONMENT...' : 'GENERATE CONNECTION CODE'}
+    </button>
   </div>
+
+
 </section>
 
 
